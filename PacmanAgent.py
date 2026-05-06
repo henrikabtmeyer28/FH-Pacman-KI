@@ -35,9 +35,7 @@ class PacmanAgent:
         if self.is_running and not (self.terminated or self.truncated):
             # TODO P1
             self.action = 1
-
             observation, reward, self.terminated, self.truncated, self.statistics = self.env.step(self.action)
-
             if self.terminated or self.truncated:
                 self.is_last_step = True
         return observation, self.is_last_step, self.statistics
