@@ -34,7 +34,7 @@ class PacmanAgent:
 
         if self.is_running and not (self.terminated or self.truncated):
             # TODO P1
-            self.action = 1
+            self.move()
 
             observation, reward, self.terminated, self.truncated, self.statistics = self.env.step(self.action)
 
@@ -47,5 +47,17 @@ class PacmanAgent:
 
     def is_game_over(self):
         return self.terminated or self.truncated
+
+    def move(self):
+        if self.env.bumped_into_wall is True:
+            self.change_direction()
+
+    def change_direction(self):
+        match self.action:
+            case 0: self.action = 2
+            case 1: self.action = 3
+            case 2: self.action = 1
+            case 3: self.action = 0
+
 # track test
 # track test
