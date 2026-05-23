@@ -1,4 +1,5 @@
 from game_core.Pacman_Environment import Pacman_Environment
+from game_core.config import TILE_TYPES
 
 """
     0: 'left',
@@ -34,9 +35,17 @@ class PacmanAgent:
 
         if self.is_running and not (self.terminated or self.truncated):
             # TODO P1
-            self.action = 1
+            #self.action = 1
 
             observation, reward, self.terminated, self.truncated, self.statistics = self.env.step(self.action)
+
+            row, column = self.env.pacman.get_position()
+
+            match self.action:
+                case 1:
+                    if(self.env.view[row][column+1] == TYLE"#"):
+                        console.log(pacman_position)
+                        
 
             if self.terminated or self.truncated:
                 self.is_last_step = True
