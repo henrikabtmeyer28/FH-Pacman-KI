@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 # Das Problem beim Expandieren ohne ein "besucht" Set ist, dass der aktuelle Knoten nicht richtig weiß, dass er nicht zurück zum Elternknoten darf. Dadurch würde eine automatische expandieren kein Ende haben und es würde unendlich weiter laufen.
+# Lösen könnte man das Problem, indem man ein Set an schon besuchten Zuständen immer den Kinderknoten übergibt. Wichtig dafür wäre noch die Spezifikation was auf dem Feld lag, denn man kann ein Feld mehrmals besuchen, ohne dass es überflüssig ist (Punkte und Powerup).
 
 
 class Knoten:
