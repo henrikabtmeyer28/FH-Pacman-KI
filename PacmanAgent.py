@@ -35,17 +35,23 @@ class PacmanAgent:
 
         if self.is_running and not (self.terminated or self.truncated):
             # TODO P1
-            #self.action = 1
+
+            (x, y) = self.env.pacman.get_position()
+            match self.action:
+                case 0:
+                    if (self.env.view[x][y-1] == TILE_TYPES['#']):
+                        self.action = 2
+                case 1:
+                    if (self.env.view[x][y+1] == TILE_TYPES['#']):
+                        self.action = 3
+                case 2:
+                    if (self.env.view[x-1][y] == TILE_TYPES['#']):
+                        self.action = 1
+                case 3:
+                    if (self.env.view[x+1][y] == TILE_TYPES['#']):
+                        self.action = 0
 
             observation, reward, self.terminated, self.truncated, self.statistics = self.env.step(self.action)
-
-            row, column = self.env.pacman.get_position()
-
-            match self.action:
-                case 1:
-                    if(self.env.view[row][column+1] == TYLE"#"):
-                        console.log(pacman_position)
-                        
 
             if self.terminated or self.truncated:
                 self.is_last_step = True
