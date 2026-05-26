@@ -39,19 +39,19 @@ class PacmanAgent:
             match self.action:
                 case 0:
                     # if (self.env.view[x][y-1] == TILE_TYPES['#']): # Aufgabe 1.4
-                    if (self.env.view[x-1][y] != TILE_TYPES['#']): #Zusatzaufgabe
+                    if (self.env.view[x-1][y] != TILE_TYPES['#']):  #Zusatzaufgabe
                         self.action = 2
                 case 1:
-                   # if (self.env.view[x][y+1] == TILE_TYPES['#']): # Aufgabe 1.4
-                    if (self.env.view[x+1][y] != TILE_TYPES['#']): # Zusatzaufgabe
+                   #  if (self.env.view[x][y+1] == TILE_TYPES['#']):  # Aufgabe 1.4
+                    if (self.env.view[x+1][y] != TILE_TYPES['#']):  # Zusatzaufgabe
                         self.action = 3
                 case 2:
-                   # if (self.env.view[x-1][y] == TILE_TYPES['#']): # Aufgabe 1.4
-                    if (self.env.view[x][y+1] != TILE_TYPES['#']): # Zusatzaufgabe
+                   #  if (self.env.view[x-1][y] == TILE_TYPES['#']):  # Aufgabe 1.4
+                    if (self.env.view[x][y+1] != TILE_TYPES['#']):  # Zusatzaufgabe
                         self.action = 1
                 case 3:
-                  #  if (self.env.view[x+1][y] == TILE_TYPES['#']): # Aufgabe 1.4
-                    if (self.env.view[x][y-1] != TILE_TYPES['#']): # Zusatzaufgabe
+                  #  if (self.env.view[x+1][y] == TILE_TYPES['#']):  # Aufgabe 1.4
+                    if (self.env.view[x][y-1] != TILE_TYPES['#']):  # Zusatzaufgabe
                         self.action = 0
 
             observation, reward, self.terminated, self.truncated, self.statistics = self.env.step(self.action)
