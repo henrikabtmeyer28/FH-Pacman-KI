@@ -7,17 +7,17 @@ class Knoten:
         self.pos_start = pos_start
         self.depth = depth
 
-    directions = [
-        (0, -1),  # links
-        (0, 1),  # rechts
-        (-1, 0),  # oben
-        (1, 0),  # unten
-    ]
-
     def expand(self) -> list[Knoten]:
+        DIRECTIONS = [
+            (0, -1),  # links
+            (0, 1),  # rechts
+            (-1, 0),  # oben
+            (1, 0),  # unten
+        ]
+
         neighbours = []
         pos_start_x, pos_start_y = self.pos_start
-        for direction_x, direction_y in self.directions:
+        for direction_x, direction_y in DIRECTIONS:
             next_x = pos_start_x + direction_x
             next_y = pos_start_y + direction_y
             if self.isValid(next_x, next_y) is True:
