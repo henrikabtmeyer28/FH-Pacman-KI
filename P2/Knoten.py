@@ -20,11 +20,15 @@ class Knoten:
         for direction_x, direction_y in self.directions:
             next_x = pos_start_x + direction_x
             next_y = pos_start_y + direction_y
-            if 0 <= next_x < len(self.level) and 0 <= next_y < len(self.level[0]):
-                if self.level[next_x][next_y] != "#":
-                    newLevel = self.adjustLevel((next_x, next_y))
-                    neighbours.append(Knoten(newLevel, (next_x, next_y), self.depth+1))
+            if self.isValid(next_x, next_y) is True:
+                newLevel = self.adjustLevel((next_x, next_y))
+                neighbours.append(Knoten(newLevel, (next_x, next_y), self.depth+1))
         return neighbours
+
+    def isValid(self, next_x, next_y):
+        return (0 <= next_x < len(self.level)
+            and 0 <= next_y < len(self.level[0])
+            and self.level[next_x][next_y] != "#")
 
     def adjustLevel(self, new_pos):
         newLevel = [row.copy() for row in self.level]
@@ -40,3 +44,9 @@ class Knoten:
         print(f"Knoten: {self.pos_start}, Tiefe: {self.depth}")
         for row in self.level:
             print("[" + " ".join(row) + "]")
+
+    def isEndNode(self):
+        for row in self.level:
+            if "*" in row:
+                return False
+        return True
