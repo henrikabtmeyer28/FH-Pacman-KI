@@ -1,5 +1,6 @@
 from game_core.Pacman_Environment import Pacman_Environment
-
+from Backend.Student_Files.P3.Knoten import Knoten
+from Backend.Student_Files.P3.Suche import Suche
 """
     0: 'left',
     1: 'right',
@@ -29,11 +30,19 @@ class PacmanAgent:
 
     def step(self):
         if self.loesungsknoten is None:
+            print("Ich gehe rein")
             # TODO P3
-            pass
+            startNode = Knoten(self.env.pacman.position_x, self.env.pacman.position_y, self.env.view, None)
+            print("knoten erstellt")
+            suche = Suche(self.tiefensuche)
+            print("Suche erstellt")
+            self.loesungsknoten = suche.starte_Suchalgorithmus(startNode)
+            print("targetNode gefunden")
+            self.action_path = suche.construct_action_path(self.loesungsknoten)
+            print("Action Path gefunden:")
+            print(self.action_path)
 
         if self.is_running and not (self.terminated or self.truncated):
-            # TODO P1
             self.move()
 
             observation, reward, self.terminated, self.truncated, self.statistics = self.env.step(self.action)
@@ -49,8 +58,10 @@ class PacmanAgent:
         return self.terminated or self.truncated
 
     def move(self):
-        if self.env.bumped_into_wall is True:
-            self.change_direction()
+        # if self.env.bumped_into_wall is True:
+        #     self.change_direction()
+        if self.action_path:
+            self.action = self.action_path.pop(0)
 
     def change_direction(self):
         match self.action:
@@ -58,6 +69,10 @@ class PacmanAgent:
             case 1: self.action = 3
             case 2: self.action = 1
             case 3: self.action = 0
+
+    def tiefensuche(self, node: Knoten, nodes) -> list[Knoten]:
+        nodes.insert(0, node)
+        return nodes
 
 # track test
 # track test
