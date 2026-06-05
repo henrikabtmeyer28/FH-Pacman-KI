@@ -1,6 +1,7 @@
 from Backend.Student_Files.P3 import Knoten
 from game_core.config import TILE_TYPES
 
+
 class Suche:
     def __init__(self, insert):
         self.openList: list[Knoten] = []
@@ -8,12 +9,10 @@ class Suche:
         self.insert = insert
 
     def starte_Suchalgorithmus(self, node: Knoten) -> Knoten | None:
-        self.openList = []
-        self.closedSet = set()
-
         self.openList = self.insert(node, self.openList)
 
         while True:
+            print("While true")
             if not self.openList:
                 return None
 
@@ -30,8 +29,8 @@ class Suche:
 
     def goal_test(self, node: Knoten) -> bool:
         for row in node.level:
-            for tile in row:
-                if tile == TILE_TYPES.get("*"):
+            for cell in row:
+                if cell == TILE_TYPES.get("*"):
                     return False
         return True
 

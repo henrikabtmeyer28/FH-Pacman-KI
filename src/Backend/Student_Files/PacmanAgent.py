@@ -32,9 +32,9 @@ class PacmanAgent:
         if self.loesungsknoten is None:
             print("Ich gehe rein")
             # TODO P3
-            startNode = Knoten(self.env.pacman.position_x, self.env.pacman.position_y, self.env.view, None)
+            startNode = Knoten(self.env.pacman.position_x, self.env.pacman.position_y, self.env.view, None, 0)
             print("knoten erstellt")
-            suche = Suche(self.tiefensuche)
+            suche = Suche(self.a_stern)
             print("Suche erstellt")
             self.loesungsknoten = suche.starte_Suchalgorithmus(startNode)
             print("targetNode gefunden")
@@ -72,6 +72,35 @@ class PacmanAgent:
 
     def tiefensuche(self, node: Knoten, nodes) -> list[Knoten]:
         nodes.insert(0, node)
+        return nodes
+
+    def breitensuche(self, node: Knoten, nodes) -> list[Knoten]:
+        nodes.append(node)
+        return nodes
+
+    def ucs(self, node: Knoten, nodes: list[Knoten]) -> list[Knoten]:
+        for i in range(len(nodes)):
+            if node.cost < nodes[i].cost:
+                nodes.insert(i, node)
+                return nodes
+        nodes.append(node)
+        return nodes
+
+    def greedy(self, node: Knoten, nodes: list[Knoten]) -> list[Knoten]:
+        # https://www.datacamp.com/de/tutorial/manhattan-distance
+        for i in range(len(nodes)):
+            if node.heuristik < nodes[i].heuristik:
+                nodes.insert(i, node)
+                return nodes
+        nodes.append(node)
+        return nodes
+
+    def a_stern(self, node: Knoten, nodes: list[Knoten]) -> list[Knoten]:
+        for i in range(len(nodes)):
+            if node.heuristik + node.cost < nodes[i].heuristik + nodes[i].cost:
+                nodes.insert(i, node)
+                return nodes
+        nodes.append(node)
         return nodes
 
 # track test

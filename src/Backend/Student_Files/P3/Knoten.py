@@ -1,13 +1,17 @@
 from __future__ import annotations
 from game_core.config import TILE_TYPES
-
+import numpy as np
+import sys
 
 class Knoten:
-    def __init__(self, pacman_pos_x, pacman_pos_y, level, parent):
+    def __init__(self, pacman_pos_x, pacman_pos_y, level, parent, cost):
         self.pacman_pos_x: int = pacman_pos_x
         self.pacman_pos_y: int = pacman_pos_y
         self.level = level
         self.parent = parent
+        self.cost = cost
+        self.hash = hash((self.pacman_pos_x, self.pacman_pos_y, tuple(tuple(row) for row in self.level)))
+        self.heuristik = self.set_heuristik()
         # [[0 for _ in range(4)] for _ in range(4)]
 
     def expand(self) -> list[Knoten]:
@@ -22,7 +26,7 @@ class Knoten:
             # Schauen ob die aktion ausführbar ist --> Ist das ein "#" oder nicht
             if self.isValid(new_pos_x, new_pos_y) is True:
                 newLevel = self.move(new_pos_x, new_pos_y)
-                nodes.append(Knoten(new_pos_x, new_pos_y, newLevel, self))
+                nodes.append(Knoten(new_pos_x, new_pos_y, newLevel, self, self.cost + 1))
 
         return nodes
 
@@ -39,14 +43,25 @@ class Knoten:
 
         return newLevel
 
+    def set_heuristik(self) -> int:
+        min_dist = sys.maxsize
+        for i in range(len(self.level)):
+            for j in range(len(self.level[i])):
+                if self.level[i][j] == TILE_TYPES.get("*"):
+                    dist = abs(self.pacman_pos_y - j) + abs(self.pacman_pos_x - i)
+                    if dist < min_dist:
+                        min_dist = dist
+
+        if min_dist == sys.maxsize:
+            return 0
+        return min_dist
+
     def __eq__(self, other):
         return (
             self.pacman_pos_x == other.pacman_pos_x and
-            self.pacman_pos_y == other.pacman_pos_y
-            # and
-            # self.level == other.level
+            self.pacman_pos_y == other.pacman_pos_y and
+            np.array_equal(self.level, other.level)
         )
 
     def __hash__(self):
-        level_key = tuple(tuple(row) for row in self.level)
-        return hash((self.pacman_pos_x, self.pacman_pos_y, level_key))
+        return self.hash
