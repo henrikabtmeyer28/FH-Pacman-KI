@@ -2,10 +2,9 @@ from Backend.Student_Files.P3 import Knoten
 from game_core.config import TILE_TYPES
 
 class Suche:
-
     def __init__(self, insert):
-        self.openList = []
-        self.closedList = []
+        self.openList: list[Knoten] = []
+        self.closedSet: set[Knoten] = set()
         self.insert = insert
 
     def starte_Suchalgorithmus(self, node: Knoten) -> Knoten | None:
@@ -30,12 +29,11 @@ class Suche:
                         self.openList = self.insert(child, self.openList)
 
     def goal_test(self, node: Knoten) -> bool:
-    # True, wenn es im gesamten Level kein '*' mehr gibt
-    for row in node.level:
-        for tile in row:
-            if tile == TILE_TYPES.get("*"):
-                return False
-    return True
+        for row in node.level:
+            for tile in row:
+                if tile == TILE_TYPES.get("*"):
+                    return False
+        return True
 
     def construct_action_path(self, node: Knoten) -> list[int]:
         if node is None:
@@ -49,13 +47,13 @@ class Suche:
             difference_y = current.pacman_pos_y - current.parent.pacman_pos_y
             action = None
             if difference_x == -1 and difference_y == 0:
-                action = 1  # right
+                action = 0  # right
             elif difference_x == 1 and difference_y == 0:
-                action = 0  # left
+                action = 1  # left
             elif difference_x == 0 and difference_y == -1:
-                action = 3  # down
+                action = 2  # down
             elif difference_x == 0 and difference_y == 1:
-                action = 2  # up
+                action = 3  # up
             path.append(action)
             current = current.parent
 

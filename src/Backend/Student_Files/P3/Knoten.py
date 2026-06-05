@@ -40,12 +40,13 @@ class Knoten:
         return newLevel
 
     def __eq__(self, other):
-        if not isinstance(other, Knoten):
-            return NotImplemented
-
         return (
             self.pacman_pos_x == other.pacman_pos_x and
             self.pacman_pos_y == other.pacman_pos_y
             # and
             # self.level == other.level
         )
+
+    def __hash__(self):
+        level_key = tuple(tuple(row) for row in self.level)
+        return hash((self.pacman_pos_x, self.pacman_pos_y, level_key))
