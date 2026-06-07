@@ -3,6 +3,7 @@ from game_core.config import TILE_TYPES
 import numpy as np
 import sys
 
+
 class Knoten:
     def __init__(self, pacman_pos_x, pacman_pos_y, level, parent, cost):
         self.pacman_pos_x: int = pacman_pos_x
@@ -27,6 +28,7 @@ class Knoten:
             if self.isValid(new_pos_x, new_pos_y) is True:
                 newLevel = self.move(new_pos_x, new_pos_y)
                 nodes.append(Knoten(new_pos_x, new_pos_y, newLevel, self, self.cost + 1))
+          #      nodes.append(Knoten(new_pos_x, new_pos_y, newLevel, self, self.cost + 1, self.remainingDots))
 
         return nodes
 

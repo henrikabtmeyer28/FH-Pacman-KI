@@ -18,7 +18,7 @@ class PacmanAgent:
         self.truncated = False
         self.statistics = None
         self.is_last_step = False
-        self.action = 1
+        self.action = 0
         self.loesungsknoten = None
         self.action_path = []
 
@@ -35,12 +35,16 @@ class PacmanAgent:
             startNode = Knoten(self.env.pacman.position_x, self.env.pacman.position_y, self.env.view, None, 0)
             print("knoten erstellt")
             suche = Suche(self.a_stern)  # Suchalgorithmus hier eingeben
+            startNode = Knoten(self.env.pacman.position_x, self.env.pacman.position_y, self.env.view, None, 0, self.env.remainingDots)
+            print("knoten erstellt")
+            suche = Suche(self.greedy)
             print("Suche erstellt")
             self.loesungsknoten = suche.starte_Suchalgorithmus(startNode)
             print("targetNode gefunden")
             self.action_path = suche.construct_action_path(self.loesungsknoten)
             print("Action Path gefunden:")
             print(self.action_path)
+            print(self.action_path[:20])
 
         if self.is_running and not (self.terminated or self.truncated):
             self.move()

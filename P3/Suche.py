@@ -1,13 +1,12 @@
-from Backend.Student_Files.P3 import Knoten
+from P3.Knoten import Knoten
 from game_core.config import TILE_TYPES
 
 
 class Suche:
-    def __init__(self, insert, remainingDots):
+    def __init__(self, insert):
         self.openList: list[Knoten] = []
         self.closedSet: set[Knoten] = set()
         self.insert = insert
-        self.remainingDots = remainingDots
 
     def starte_Suchalgorithmus(self, node: Knoten) -> Knoten | None:
         self.openList = self.insert(node, self.openList)
