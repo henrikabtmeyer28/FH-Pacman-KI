@@ -5,14 +5,14 @@ import sys
 
 
 class Knoten:
-    def __init__(self, pacman_pos_x, pacman_pos_y, level, parent, cost):
+    def __init__(self, pacman_pos_x, pacman_pos_y, level, parent, cost, remainingDots):
         self.pacman_pos_x: int = pacman_pos_x
         self.pacman_pos_y: int = pacman_pos_y
         self.level = level
         self.parent = parent
         self.cost = cost
-        self.hash = hash((self.pacman_pos_x, self.pacman_pos_y, tuple(tuple(row) for row in self.level)))
         self.heuristik = self.set_heuristik()
+        self.remainingDots = remainingDots
         # [[0 for _ in range(4)] for _ in range(4)]
 
     def expand(self) -> list[Knoten]:
@@ -26,22 +26,25 @@ class Knoten:
             new_pos_y = self.pacman_pos_y + action_y
             # Schauen ob die aktion ausführbar ist --> Ist das ein "#" oder nicht
             if self.isValid(new_pos_x, new_pos_y) is True:
-                newLevel = self.move(new_pos_x, new_pos_y)
-                nodes.append(Knoten(new_pos_x, new_pos_y, newLevel, self, self.cost + 1))
-          #      nodes.append(Knoten(new_pos_x, new_pos_y, newLevel, self, self.cost + 1, self.remainingDots))
+                newLevel, newRemainingDots = self.move(new_pos_x, new_pos_y)
+                nodes.append(Knoten(new_pos_x, new_pos_y, newLevel, self, self.cost + 1, newRemainingDots))
 
         return nodes
 
     def isValid(self, new_pos_x, new_pos_y) -> bool:
-        if (self.level[new_pos_y][new_pos_x] != TILE_TYPES.get('#')):
-            return True
-        return False
+        return self.level[new_pos_y][new_pos_x] != TILE_TYPES.get('#')
 
     def move(self, new_pos_x, new_pos_y):
         newLevel = [row.copy() for row in self.level]
         newLevel[self.pacman_pos_y][self.pacman_pos_x] = TILE_TYPES.get(' ')
+
+        newRemainingDots = self.remainingDots
+
+        if newLevel[new_pos_y][new_pos_x] == TILE_TYPES.get('*'):
+            newRemainingDots -= 1
+
         newLevel[new_pos_y][new_pos_x] = TILE_TYPES.get('P')
-        return newLevel
+        return newLevel, newRemainingDots
 
     def set_heuristik(self) -> int:
         min_dist = sys.maxsize
@@ -57,11 +60,7 @@ class Knoten:
         return min_dist
 
     def __eq__(self, other):
-        return (
-            self.pacman_pos_x == other.pacman_pos_x and
-            self.pacman_pos_y == other.pacman_pos_y and
-            np.array_equal(self.level, other.level)
-        )
+        return self.__hash__() == other.__hash__()
 
     def __hash__(self):
-        return self.hash
+        return hash((self.pacman_pos_x, self.pacman_pos_y, tuple(tuple(row) for row in self.level)))

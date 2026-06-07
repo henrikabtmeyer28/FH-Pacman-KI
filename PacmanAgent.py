@@ -36,7 +36,7 @@ class PacmanAgent:
         if self.loesungsknoten is None:
             print("Ich gehe rein")
             # TODO P3
-            startNode = Knoten(self.env.pacman.position_x, self.env.pacman.position_y, self.env.view, None, 0)
+            startNode = Knoten(self.env.pacman.position_x, self.env.pacman.position_y, self.env.view, None, 0, self.env.remainingDots)
             print("knoten erstellt")
             suche = Suche(self.a_stern)
             print("Suche erstellt")
