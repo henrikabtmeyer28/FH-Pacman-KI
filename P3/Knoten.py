@@ -13,7 +13,6 @@ class Knoten:
         self.cost = cost
         self.hash = hash((self.pacman_pos_x, self.pacman_pos_y, tuple(tuple(row) for row in self.level)))
         self.heuristik = self.set_heuristik()
-        # [[0 for _ in range(4)] for _ in range(4)]
 
     def expand(self) -> list[Knoten]:
         actions = [(-1, 0), (0, -1), (1, 0), (0, 1)]
@@ -28,7 +27,6 @@ class Knoten:
             if self.isValid(new_pos_x, new_pos_y) is True:
                 newLevel = self.move(new_pos_x, new_pos_y)
                 nodes.append(Knoten(new_pos_x, new_pos_y, newLevel, self, self.cost + 1))
-          #      nodes.append(Knoten(new_pos_x, new_pos_y, newLevel, self, self.cost + 1, self.remainingDots))
 
         return nodes
 
@@ -44,17 +42,13 @@ class Knoten:
         return newLevel
 
     def set_heuristik(self) -> int:
-        min_dist = sys.maxsize
-        for i in range(len(self.level)):
-            for j in range(len(self.level[i])):
-                if self.level[i][j] == TILE_TYPES.get("*"):
-                    dist = abs(self.pacman_pos_y - j) + abs(self.pacman_pos_x - i)
-                    if dist < min_dist:
-                        min_dist = dist
-
-        if min_dist == sys.maxsize:
-            return 0
-        return min_dist
+    total_dist = 0
+    for i in range(len(self.level)):
+        for j in range(len(self.level[i])):
+            if self.level[i][j] == TILE_TYPES.get("*"):
+                dist = abs(self.pacman_pos_x - i) + abs(self.pacman_pos_y - j)
+                total_dist += dist
+    return total_dist
 
     def __eq__(self, other):
         return (

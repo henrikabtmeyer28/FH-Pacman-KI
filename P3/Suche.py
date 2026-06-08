@@ -19,6 +19,8 @@ class Suche:
             current = self.openList.pop(0)
 
             if self.goal_test(current):
+                print("Länge Open List: ", len(self.openList))
+                print("Länge Closed List: ", len(self.closedSet))
                 return current
 
             if current not in self.closedSet:

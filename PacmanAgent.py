@@ -35,7 +35,6 @@ class PacmanAgent:
 
         if self.loesungsknoten is None:
             print("Ich gehe rein")
-            # TODO P3
             startNode = Knoten(self.env.pacman.position_x, self.env.pacman.position_y, self.env.view, None, 0)
             print("knoten erstellt")
             suche = Suche(self.a_stern)
@@ -45,6 +44,7 @@ class PacmanAgent:
             self.action_path = suche.construct_action_path(self.loesungsknoten)
             print("Action Path gefunden:")
             print(self.action_path)
+            print("Länge des Action Path: ", len(self.action_path))
 
         if self.is_running and not (self.terminated or self.truncated):
             self.move()
@@ -62,6 +62,7 @@ class PacmanAgent:
         return self.terminated or self.truncated
 
     def move(self):
+        # Code für P1
         # if self.env.bumped_into_wall is True:
         #     self.change_direction()
         if self.action_path:
