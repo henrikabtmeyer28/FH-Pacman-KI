@@ -30,11 +30,7 @@ class Suche:
                         self.openList = self.insert(child, self.openList)
 
     def goal_test(self, node: Knoten) -> bool:
-        for row in node.level:
-            for cell in row:
-                if cell == TILE_TYPES.get("*"):
-                    return False
-        return True
+        return len(node.remaining_dots) == 0
 
     def construct_action_path(self, node: Knoten) -> list[int]:
         if node is None:

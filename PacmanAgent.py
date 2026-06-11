@@ -1,7 +1,12 @@
 import sys
 sys.path.append('/app/src/Backend/Student_Files')
 from game_core.Pacman_Environment import Pacman_Environment
+
+import importlib
+import P3.Knoten
+importlib.reload(P3.Knoten)
 from P3.Knoten import Knoten
+
 from P3.Suche import Suche
 """
     0: 'left',
@@ -37,7 +42,7 @@ class PacmanAgent:
             print("Ich gehe rein")
             startNode = Knoten(self.env.pacman.position_x, self.env.pacman.position_y, self.env.view, None, 0)
             print("knoten erstellt")
-            suche = Suche(self.a_stern)
+            suche = Suche(self.tiefensuche)
             print("Suche erstellt")
             self.loesungsknoten = suche.starte_Suchalgorithmus(startNode)
             print("targetNode gefunden")
