@@ -1,20 +1,18 @@
 import sys
 sys.path.append('/app/src/Backend/Student_Files')
 from game_core.Pacman_Environment import Pacman_Environment
-
 import importlib
 import P3.Knoten
 importlib.reload(P3.Knoten)
 from P3.Knoten import Knoten
-
 from P3.Suche import Suche
+from collections import deque
 """
     0: 'left',
     1: 'right',
     2: 'up',
     3: 'down'
 """
-
 
 class PacmanAgent:
     def __init__(self):
@@ -42,7 +40,7 @@ class PacmanAgent:
             print("Ich gehe rein")
             startNode = Knoten(self.env.pacman.position_x, self.env.pacman.position_y, self.env.view, None, 0)
             print("knoten erstellt")
-            suche = Suche(self.tiefensuche)
+            suche = Suche(self.tiefensuche)  # Sucheingabe
             print("Suche erstellt")
             self.loesungsknoten = suche.starte_Suchalgorithmus(startNode)
             print("targetNode gefunden")
@@ -67,9 +65,6 @@ class PacmanAgent:
         return self.terminated or self.truncated
 
     def move(self):
-        # Code für P1
-        # if self.env.bumped_into_wall is True:
-        #     self.change_direction()
         if self.action_path:
             self.action = self.action_path.pop(0)
 
@@ -80,38 +75,32 @@ class PacmanAgent:
             case 2: self.action = 1
             case 3: self.action = 0
 
-    def tiefensuche(self, node: Knoten, nodes) -> list[Knoten]:
-        nodes.insert(0, node)
-        return nodes
+    def tiefensuche(self, node: Knoten, nodes: deque[Knoten]) -> deque[Knoten]:
+        return nodes.appendleft(node)
 
-    def breitensuche(self, node: Knoten, nodes) -> list[Knoten]:
-        nodes.append(node)
-        return nodes
+    def breitensuche(self, node: Knoten, nodes: deque[Knoten]) -> deque[Knoten]:
+        return nodes.append(node)
 
-    def ucs(self, node: Knoten, nodes: list[Knoten]) -> list[Knoten]:
+    def ucs(self, node: Knoten, nodes: deque[Knoten]) -> deque[Knoten]:
         for i in range(len(nodes)):
             if node.cost < nodes[i].cost:
-                nodes.insert(i, node)
-                return nodes
-        nodes.append(node)
-        return nodes
+                return nodes.insert(i, node)
+        return nodes.append(node)
 
-    def greedy(self, node: Knoten, nodes: list[Knoten]) -> list[Knoten]:
+    def greedy(self, node: Knoten, nodes: deque[Knoten]) -> deque[Knoten]:
         # https://www.datacamp.com/de/tutorial/manhattan-distance
         for i in range(len(nodes)):
             if node.heuristik < nodes[i].heuristik:
                 nodes.insert(i, node)
                 return nodes
-        nodes.append(node)
-        return nodes
+        return nodes.append(node)
 
-    def a_stern(self, node: Knoten, nodes: list[Knoten]) -> list[Knoten]:
+    def a_stern(self, node: Knoten, nodes: deque[Knoten]) -> deque[Knoten]:
         for i in range(len(nodes)):
             if node.heuristik + node.cost < nodes[i].heuristik + nodes[i].cost:
                 nodes.insert(i, node)
                 return nodes
-        nodes.append(node)
-        return nodes
+        return nodes.append(node)
 
 # track test
 # track test

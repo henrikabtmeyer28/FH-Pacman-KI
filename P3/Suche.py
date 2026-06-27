@@ -1,10 +1,11 @@
 from P3.Knoten import Knoten
-from game_core.config import TILE_TYPES
+from collections import deque
 
 
 class Suche:
     def __init__(self, insert):
-        self.openList: list[Knoten] = []
+      #  openList ist deque statt list
+        self.openList: deque[Knoten] = deque()
         self.closedSet: set[Knoten] = set()
         self.insert = insert
 
@@ -16,7 +17,8 @@ class Suche:
             if not self.openList:
                 return None
 
-            current = self.openList.pop(0)
+           # erstes Element wird entfernt, ohne dass die Elemente einen nach vorne verschoben werden
+            current = self.openList.popleft()
 
             if self.goal_test(current):
                 print("Länge Open List: ", len(self.openList))
