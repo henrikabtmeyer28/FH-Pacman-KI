@@ -19,13 +19,15 @@ class Knoten:
             )
         else:
             self.level = parent.level
-            self.remaining_dots = parent.remaining_dots
 
-        if (self.pacman_pos_x, self.pacman_pos_y) in self.remaining_dots:
-            self.remaining_dots = self.remaining_dots - {(self.pacman_pos_x, self.pacman_pos_y)}
+            if (self.pacman_pos_x, self.pacman_pos_y) in parent.remaining_dots:
+                # Knoten referenziert parent.remaining_dots ohne den aktuellen Punkt, statt das frozenset neu "anzulegen"
+                self.remaining_dots = parent.remaining_dots - {(self.pacman_pos_x, self.pacman_pos_y)}
+            else:
+                self.remaining_dots = parent.remaining_dots
 
         self.heuristik = self.set_heuristik()
-        self._hash = hash((self.pacman_pos_x, self.pacman_pos_y, self.remaining_dots))
+        # self.hash entfernt, da der Knoten es nur beim Speichern im Set braucht und sonst nicht
 
     def expand(self):
         actions = [(-1, 0), (0, -1), (1, 0), (0, 1)]
@@ -50,11 +52,8 @@ class Knoten:
         ) + len(self.remaining_dots) - 1
 
     def __hash__(self):
-        return self._hash
+        return hash((self.pacman_pos_x, self.pacman_pos_y, self.remaining_dots))
 
     def __eq__(self, other):
-        return (
-            self.pacman_pos_x == other.pacman_pos_x and
-            self.pacman_pos_y == other.pacman_pos_y and
-            self.remaining_dots == other.remaining_dots
-        )
+        # statt 3 Abfragen wird nur der Hash Wert verglichen
+        return (self.__hash__() == other.__hash__())

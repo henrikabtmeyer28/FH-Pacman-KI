@@ -40,7 +40,7 @@ class PacmanAgent:
             print("Ich gehe rein")
             startNode = Knoten(self.env.pacman.position_x, self.env.pacman.position_y, self.env.view, None, 0)
             print("knoten erstellt")
-            suche = Suche(self.tiefensuche)  # Sucheingabe
+            suche = Suche(self.a_stern)  # Sucheingabe
             print("Suche erstellt")
             self.loesungsknoten = suche.starte_Suchalgorithmus(startNode)
             print("targetNode gefunden")
