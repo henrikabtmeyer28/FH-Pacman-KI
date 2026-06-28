@@ -76,16 +76,19 @@ class PacmanAgent:
             case 3: self.action = 0
 
     def tiefensuche(self, node: Knoten, nodes: deque[Knoten]) -> deque[Knoten]:
-        return nodes.appendleft(node)
+        nodes.appendleft(node)
+        return nodes
 
     def breitensuche(self, node: Knoten, nodes: deque[Knoten]) -> deque[Knoten]:
-        return nodes.append(node)
+        nodes.append(node)
+        return nodes
 
     def ucs(self, node: Knoten, nodes: deque[Knoten]) -> deque[Knoten]:
         for i in range(len(nodes)):
             if node.cost < nodes[i].cost:
                 return nodes.insert(i, node)
-        return nodes.append(node)
+        nodes.append(node)
+        return nodes
 
     def greedy(self, node: Knoten, nodes: deque[Knoten]) -> deque[Knoten]:
         # https://www.datacamp.com/de/tutorial/manhattan-distance
@@ -93,14 +96,16 @@ class PacmanAgent:
             if node.heuristik < nodes[i].heuristik:
                 nodes.insert(i, node)
                 return nodes
-        return nodes.append(node)
+        nodes.append(node)
+        return nodes
 
     def a_stern(self, node: Knoten, nodes: deque[Knoten]) -> deque[Knoten]:
         for i in range(len(nodes)):
             if node.heuristik + node.cost < nodes[i].heuristik + nodes[i].cost:
                 nodes.insert(i, node)
                 return nodes
-        return nodes.append(node)
+        nodes.append(node)
+        return nodes
 
 # track test
 # track test

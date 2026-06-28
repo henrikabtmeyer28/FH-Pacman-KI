@@ -22,21 +22,19 @@ class Knoten:
             self.remaining_dots = parent.remaining_dots
 
         if (self.pacman_pos_x, self.pacman_pos_y) in self.remaining_dots:
-            self.remaining_dots = (self.remaining_dots - {(self.pacman_pos_x, self.pacman_pos_y)})
+            self.remaining_dots = self.remaining_dots - {(self.pacman_pos_x, self.pacman_pos_y)}
 
         self.heuristik = self.set_heuristik()
         self._hash = hash((self.pacman_pos_x, self.pacman_pos_y, self.remaining_dots))
 
     def expand(self):
         actions = [(-1, 0), (0, -1), (1, 0), (0, 1)]
-        nodes = []
         for action_x, action_y in actions:
             new_x = self.pacman_pos_x + action_x
             new_y = self.pacman_pos_y + action_y
             if self.isValid(new_x, new_y):
-               # yield Knoten(new_x, new_y, None, self, self.cost + 1)
-                nodes.append(Knoten(new_x, new_y, None, self, self.cost + 1))
-        return nodes
+                # yield generiert einen Knoten. Statt eine Liste zu erstellen, werden die Knoten zur Laufzeit erstellt.
+                yield Knoten(new_x, new_y, None, self, self.cost + 1)
 
     def isValid(self, new_pos_x, new_pos_y):
         if new_pos_x < 0 or new_pos_y < 0 or new_pos_y >= len(self.level) or new_pos_x >= len(self.level[0]):
