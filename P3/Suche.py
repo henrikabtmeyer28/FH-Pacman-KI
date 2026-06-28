@@ -1,35 +1,41 @@
 from P3.Knoten import Knoten
 from collections import deque
+import heapq
 
 
 class Suche:
-    def __init__(self, insert):
-      #  openList ist deque statt list
-        self.openList: deque[Knoten] = deque()
-        self.closedSet: set[Knoten] = set()
+    def __init__(self, insert, heap: bool):
         self.insert = insert
+        if heap:
+            # heapq sortiert Knoten automatisch nach Priorität
+            self.openList = []
+        else:
+            #  openList als deque für besseres Entfernen von Knoten
+            self.openList: deque[Knoten] = deque()
+        self.closedSet: set[Knoten] = set()
 
     def starte_Suchalgorithmus(self, node: Knoten) -> Knoten | None:
         self.openList = self.insert(node, self.openList)
 
-        while True:
+        while self.openList:
             print("While true")
-            if not self.openList:
-                return None
 
            # erstes Element wird entfernt, ohne dass die Elemente einen nach vorne verschoben werden
-            current = self.openList.popleft()
+            if isinstance(self.openList, deque):
+                current = self.openList.popleft()
+            else:
+                _, _, current = heapq.heappop(self.openList)
 
             if self.goal_test(current):
                 print("Länge Open List: ", len(self.openList))
                 print("Länge Closed List: ", len(self.closedSet))
                 return current
 
-            if current not in self.closedSet:
-                self.closedSet.add(current)
-                for child in current.expand():
-                    if child not in self.closedSet:
-                        self.openList = self.insert(child, self.openList)
+            # current wird direkt in closedList eingefügt. Wenn's doppelt ist, wird es entfernt
+            self.closedSet.add(current)
+            for child in current.expand():
+                if child not in self.closedSet:
+                    self.openList = self.insert(child, self.openList)
 
     def goal_test(self, node: Knoten) -> bool:
         return len(node.remaining_dots) == 0

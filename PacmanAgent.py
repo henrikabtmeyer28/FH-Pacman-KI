@@ -7,6 +7,8 @@ importlib.reload(P3.Knoten)
 from P3.Knoten import Knoten
 from P3.Suche import Suche
 from collections import deque
+import heapq
+from itertools import count
 """
     0: 'left',
     1: 'right',
@@ -26,6 +28,7 @@ class PacmanAgent:
         self.action = 1
         self.loesungsknoten = None
         self.action_path = []
+        self.counter = count()
 
     def render(self):
         self.env.render()
@@ -40,7 +43,7 @@ class PacmanAgent:
             print("Ich gehe rein")
             startNode = Knoten(self.env.pacman.position_x, self.env.pacman.position_y, self.env.view, None, 0)
             print("knoten erstellt")
-            suche = Suche(self.a_stern)  # Sucheingabe
+            suche = Suche(self.ucs, True)  # Sucheingabe + Heap
             print("Suche erstellt")
             self.loesungsknoten = suche.starte_Suchalgorithmus(startNode)
             print("targetNode gefunden")
@@ -83,14 +86,21 @@ class PacmanAgent:
         nodes.append(node)
         return nodes
 
-    def ucs(self, node: Knoten, nodes: deque[Knoten]) -> deque[Knoten]:
+    '''def ucs(self, node: Knoten, nodes: list[Knoten]) -> list[Knoten]:
         for i in range(len(nodes)):
             if node.cost < nodes[i].cost:
                 return nodes.insert(i, node)
         nodes.append(node)
         return nodes
+        '''
 
-    def greedy(self, node: Knoten, nodes: deque[Knoten]) -> deque[Knoten]:
+    def ucs(self, node: Knoten, nodes: list) -> list:
+        print(type(nodes))
+        heapq.heappush(nodes, (node.cost, next(self.counter), node))
+        return nodes
+
+    def greedy(self, node: Knoten, nodes: list) -> list:
+        '''
         # https://www.datacamp.com/de/tutorial/manhattan-distance
         for i in range(len(nodes)):
             if node.heuristik < nodes[i].heuristik:
@@ -98,13 +108,20 @@ class PacmanAgent:
                 return nodes
         nodes.append(node)
         return nodes
+        '''
+        heapq.heappush(nodes, (node.heuristik, next(self.counter), node))
+        return nodes
 
-    def a_stern(self, node: Knoten, nodes: deque[Knoten]) -> deque[Knoten]:
+    def a_stern(self, node: Knoten, nodes: list) -> list:
+        '''
         for i in range(len(nodes)):
             if node.heuristik + node.cost < nodes[i].heuristik + nodes[i].cost:
                 nodes.insert(i, node)
                 return nodes
         nodes.append(node)
+        return nodes
+        '''
+        heapq.heappush(nodes, (node.cost + node.heuristik, next(self.counter), node))
         return nodes
 
 # track test
