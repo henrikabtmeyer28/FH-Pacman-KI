@@ -56,4 +56,4 @@ class Knoten:
 
     def __eq__(self, other):
         # statt 3 Abfragen wird nur der Hash Wert verglichen
-        return (self.__hash__() == other.__hash__())
+        return self.__hash__() == other.__hash__()
