@@ -5,56 +5,37 @@ from __future__ import annotations
 
 
 class Knoten:
-    def __init__(self, pacmanPos, map, eltern=None):
-        self.map = map
-        self.pacmanRow, self.pacmanColumn = pacmanPos
-        self.eltern = eltern
-
-    def checkUmfeld(self, map, row, column) -> list[int]:
-        ans = []
-        if(self.isValidField(map[row][column - 1])):
-            ans.append(0)
-        if(self.isValidField(map[row][column + 1])):
-            ans.append(1)
-        if(self.isValidField(map[row - 1][column])):
-            ans.append(2)
-        if(self.isValidField(map[row + 1][column])):
-            ans.append(3)
-        return ans
-
-    def isValidField(self, char):
-        match char:
-            case ' ':
-                return True
-            case '*':
-                return True
-            case 'X':
-                return True
-            case _:
-                return False
+    def __init__(self, pacman_pos_x, pacman_pos_y, level):
+        self.pacman_pos_x: int = pacman_pos_x
+        self.pacman_pos_y: int = pacman_pos_y
+        self.level = level
+        # [[0 for _ in range(4)] for _ in range(4)]
 
     def expand(self) -> list[Knoten]:
-        moeglicheRichtungen = self.checkUmfeld(self.map, self.pacmanRow, self.pacmanColumn)
+        actions = [(0, 1), (0, -1), (1, 0), (-1, 0)]
+        # Eine Liste/ Array erstellen, in die alle abzuarbeitenden Knoten sind (am anfang nur er selbst)
+        nodes = []
 
-        RICHTUNGS_MAPPING = {
-        0: (0, -1),   # links
-        1: (0,  1),   # rechts
-        2: (-1, 0),   # oben
-        3: (1,  0),   # unten
-        }
+        # Für jede ausführbare Aktion: Die in die Liste/ Array hinzufügen
+        for action_x, action_y in actions:
+            new_pos_x = self.pacman_pos_x + action_x
+            new_pos_y = self.pacman_pos_y + action_y
+            # Schauen ob die aktion ausführbar ist --> Ist das ein "#" oder nicht
+            if self.isValid(new_pos_x, new_pos_y) is True:
+                newLevel = self.move(new_pos_x, new_pos_y)
+                nodes.append(Knoten(new_pos_x, new_pos_y, newLevel))
 
-        ans = []
-        for richtung in moeglicheRichtungen:
-            x, y = RICHTUNGS_MAPPING[richtung]
-            newRow = self.pacmanRow + x
-            newColumn = self.pacmanColumn + y
+        return nodes
 
-            #Erstellt richtige Kopie der Map, nicht nur neue Referenz auf gleiches Objekt
-            newMap = [reihe[:] for reihe in self.map]
+    def isValid(self, new_pos_x, new_pos_y) -> bool:
+        if (self.level[new_pos_x][new_pos_y] != "#"):
+            return True
+        return False
 
-            newMap[newRow][newColumn] = 'P'
-            newMap[self.pacmanRow][self.pacmanColumn] = ' '
+    def move(self, new_pos_x, new_pos_y):
+        newLevel = [row.copy() for row in self.level]
+        newLevel[self.pacman_pos_x][self.pacman_pos_y] = " "
 
-            ans.append(Knoten(pacmanPos=(newRow, newColumn), map= newMap, eltern= self))
+        newLevel[new_pos_x][new_pos_y] = "P"
 
-        return ans
+        return newLevel
