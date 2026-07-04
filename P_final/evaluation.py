@@ -1,4 +1,10 @@
-from P3.bfs import bfs_distanzen, begehbare_nachbarn
+import importlib
+
+import P_final.bfs_distanzen
+
+importlib.reload(P_final.bfs_distanzen)
+
+from P_final.bfs_distanzen import bfs_distanzen, begehbare_nachbarn
 from game_core.config import powerpill_time_max  # = 10
 
 
@@ -6,23 +12,11 @@ def evaluate(pos, level, wertekarte, dot_positionen,
              geister, sackgassen, powerpill_timer=0, distanzen=None):
     """
     Bewertet eine Position mit allen Faktoren.
-
-    Parameter:
-        pos:              (x, y) — das zu bewertende Feld
-        level:            Spielfeld (env.view)
-        wertekarte:       Dict aus value_iteration()
-        dot_positionen:   Set der aktuellen Dot-Positionen
-        geister:          Liste aus env.ghostlist()
-        sackgassen:       Set der Sackgassen-Felder
-        powerpill_timer:  Verbleibende Züge der Powerpill-Wirkung
-                          (0 = keine aktiv). Kommt von der Pacman-Entität
-        distanzen:        Dict aus bfs_distanzen() — optional
-
-    Returns:
-        float: Score — je höher, desto besser
+    pos ist durchgehend (y, x).
     """
     if distanzen is None:
         distanzen = bfs_distanzen(level, pos[0], pos[1])
+        # pos[0] = y, pos[1] = x → passt zur neuen Signatur
 
     score = 0.0
 
@@ -54,21 +48,21 @@ def evaluate(pos, level, wertekarte, dot_positionen,
     geister_sind_veraengstigt = powerpill_timer > 0
 
     for ghost in geister:
-        ghost_pos = ghost.get_position()       # (x, y) Tuple
-        ghost_typ = ghost.getType()             # 'R', 'H' oder 'E'
-        ghost_tot = ghost.get_is_dead()         # True/False
-        respawn_zeit = ghost.get_respawn_time()  # int
+        gy, gx = ghost.get_position()
+        ghost_pos = (gy, gx)                             # war: (gx, gy)
+        ghost_typ = ghost.getType()
+        ghost_tot = ghost.get_is_dead()
+        respawn_zeit = ghost.get_respawn_time()
 
-        # Tote Geister sind keine Gefahr — aber Respawn beachten!
         if ghost_tot:
-            # Geist respawnt bald an seiner Startposition
             if respawn_zeit <= 2:
-                respawn_pos = ghost.get_respawn_pos()
+                ry, rx = ghost.get_respawn_pos()
+                respawn_pos = (ry, rx)                   # war: (rx, ry)
                 if respawn_pos in distanzen:
                     respawn_dist = distanzen[respawn_pos]
                     if respawn_dist <= 2:
-                        score -= 200  # Respawn in der direkten nähe
-            continue  # Rest überspringen, Geist ist tot
+                        score -= 200
+            continue
 
         # BFS-Distanz zum Geist
         if ghost_pos in distanzen:
@@ -78,24 +72,20 @@ def evaluate(pos, level, wertekarte, dot_positionen,
 
         # ------ GEISTER SIND VERÄNGSTIGT ------
         if geister_sind_veraengstigt:
-            # Können wir ihn noch rechtzeitig erreichen?
             if powerpill_timer > dist and dist > 0:
-                score += 300 / (dist + 1)  # Je näher, desto besser
-            # Timer fast abgelaufen aber Geist nah → Gefahr!
+                score += 300 / (dist + 1)
             elif powerpill_timer <= 2 and dist <= 2:
                 score -= 300
 
         # ------ GEISTER SIND NORMAL ------
         else:
             if dist <= 1:
-                score -= 10000
+                score -= 100000
             elif dist <= 2:
-                score -= 500
+                score -= 1000
             elif dist <= 4:
-                # Hunter verfolgt gezielt → gefährlicher
                 faktor = 2.5 if ghost_typ == 'H' else 1.0
                 score -= faktor * 80 / dist
-            # Distanz > 4: Geist wird ignoriert
 
     # ============================================
     # FEATURE 5: Sackgassen-Strafe
@@ -111,6 +101,7 @@ def evaluate(pos, level, wertekarte, dot_positionen,
     # FEATURE 6: Bewegungsfreiheit
     # ============================================
     anzahl_nachbarn = len(begehbare_nachbarn(level, pos[0], pos[1]))
+    # pos[0] = y, pos[1] = x → passt
     score += 3 * anzahl_nachbarn
 
     return score
@@ -122,7 +113,7 @@ def _naechster_geist_dist(geister, distanzen):
     for ghost in geister:
         if ghost.get_is_dead():
             continue
-        ghost_pos = ghost.get_position()
+        ghost_pos = ghost.get_position()    # gibt (y, x) zurück → passt direkt
         if ghost_pos in distanzen:
             min_dist = min(min_dist, distanzen[ghost_pos])
     return min_dist
