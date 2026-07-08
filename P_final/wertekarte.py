@@ -8,7 +8,7 @@ from P_final.bfs_distanzen import begehbare_nachbarn
 
 
 def value_iteration(level, begehbare_felder, dot_positionen,
-                    gamma=0.85, iterationen=40):
+                    gamma=0.65, iterationen=40):
     """
     Berechnet eine Wertekarte für die gesamte Map.
     Positionen sind durchgehend (y, x).
@@ -24,7 +24,7 @@ def value_iteration(level, begehbare_felder, dot_positionen,
             if feld in dot_positionen:
                 reward = 10.0
             elif tile == TILE_TYPES.get('X'):
-                reward = 15.0
+                reward = 10.0
             else:
                 reward = -0.1
 

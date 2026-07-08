@@ -10,7 +10,8 @@ from game_core.config import powerpill_time_max  # = 10
 
 def evaluate(pos, level, wertekarte, dot_positionen,
              geister, sackgassen, powerpill_timer=0,
-             distanzen=None, geister_distanzen=None):
+             distanzen=None, geister_distanzen=None,
+             pac_pos=None):
     """
     Bewertet eine Position mit allen Faktoren.
 
@@ -20,12 +21,12 @@ def evaluate(pos, level, wertekarte, dot_positionen,
         wertekarte:        Dict aus value_iteration()
         dot_positionen:    Set der aktuellen Dot-Positionen
         geister:           Liste aus env.ghost_list
-        sackgassen:        Set der Sackgassen-Felder
+        sackgassen:        Dict {(y,x): tiefe} aus finde_sackgassen()
         powerpill_timer:   Verbleibende Züge der Powerpill-Wirkung
         distanzen:         Dict aus bfs_distanzen() von Pacmans Position
-        geister_distanzen: Dict {ghost_obj: bfs_dict} — BFS von jedem
-                           lebenden Geist. Gibt die echte Labyrinth-Distanz
-                           vom Geist zu jeder Position.
+        geister_distanzen: Dict {ghost_obj: bfs_dict}
+        pac_pos:           (y, x) aktuelle Position von Pacman
+                           (für Flucht-aus-Sackgasse Logik)
 
     Returns:
         float: Score — je höher, desto besser
@@ -62,8 +63,9 @@ def evaluate(pos, level, wertekarte, dot_positionen,
     # ============================================
     geister_sind_veraengstigt = powerpill_timer > 0
 
-    nahe_geister = 0       # Zähler für Geister in Reichweite <= 5
+    nahe_geister = 0
     naechste_geist_dist = float('inf')
+    naechster_geist_typ = None
 
     for ghost in geister:
         gy, gx = ghost.get_position()
@@ -84,11 +86,11 @@ def evaluate(pos, level, wertekarte, dot_positionen,
             continue
 
         # --- Distanz vom Geist zur Kandidatenposition ---
-        # Priorität: BFS vom Geist (genau) > BFS von Pacman (Näherung) > Manhattan
         dist = _ghost_dist(ghost, pos, ghost_pos, geister_distanzen, distanzen)
 
         if dist < naechste_geist_dist:
             naechste_geist_dist = dist
+            naechster_geist_typ = ghost_typ
 
         if dist <= 5:
             nahe_geister += 1
@@ -96,29 +98,24 @@ def evaluate(pos, level, wertekarte, dot_positionen,
         # ------ GEISTER SIND VERÄNGSTIGT ------
         if geister_sind_veraengstigt:
             if powerpill_timer > dist + 1 and dist > 0:
-                # Genug Zeit, Geist zu jagen
                 score += 300 / (dist + 1)
             elif powerpill_timer <= 3 and dist <= 3:
-                # Timer läuft bald ab, Geist nah -> Gefahr!
                 score -= 500
         # ------ GEISTER SIND NORMAL ------
         else:
             if dist <= 1:
-                score -= 100000       # Tödlich
+                score -= 100000
             elif dist <= 2:
                 score -= 3000
             elif dist <= 3:
                 score -= 800
             elif dist <= 5:
-                # Hunter ist gefährlicher (verfolgt aktiv)
                 faktor = 3.0 if ghost_typ == 'H' else 1.0
                 score -= faktor * 150 / dist
             elif dist <= 8:
-                # Hunter aus mittlerer Distanz beachten
                 faktor = 2.0 if ghost_typ == 'H' else 0.5
                 score -= faktor * 60 / dist
             elif dist <= 12 and ghost_typ == 'H':
-                # Hunter auch aus großer Distanz leicht beachten
                 score -= 20 / dist
 
     # ============================================
@@ -128,24 +125,109 @@ def evaluate(pos, level, wertekarte, dot_positionen,
         score -= 400 * nahe_geister
 
     # ============================================
-    # FEATURE 6: Sackgassen-Strafe
+    # FEATURE 6: Sackgassen — tiefenbasiert
     # ============================================
+    # sackgassen ist jetzt ein Dict {pos: tiefe}
+    # tiefe = Schritte bis zum Ausgang (Kreuzung)
+    # Kernidee: Sicher wenn ghost_dist > 2 * tiefe + Puffer
+    #           (rein + raus bevor Geist am Ausgang ist)
+    #           Geister sind außerdem langsamer als Pacman!
+    verbleibende_dots = len(dot_positionen)
+
     if pos in sackgassen and not geister_sind_veraengstigt:
-        if naechste_geist_dist < 6:
-            score -= 1500
-        elif naechste_geist_dist < 10:
-            score -= 400
-        elif naechste_geist_dist < 15:
-            score -= 100
+        tiefe = sackgassen[pos]
+        hunter_puffer = 5 if naechster_geist_typ == 'H' else 0
+
+        # --- ENDGAME-ERKENNUNG ---
+        # Zähle wie viele der verbleibenden Dots in Sackgassen liegen
+        dots_in_sackgassen = sum(1 for d in dot_positionen if d in sackgassen)
+        ist_endgame = verbleibende_dots <= 5 and dots_in_sackgassen > 0
+
+        if ist_endgame and pos in dot_positionen:
+            # ENDGAME: Pacman muss nur REIN, nicht zurück!
+            # Spiel endet sofort wenn alle Dots gefressen sind.
+            # → Sicherheitsgrenze = nur Hinweg (tiefe statt 2*tiefe)
+            sicherheits_grenze = tiefe + hunter_puffer
+
+            if naechste_geist_dist <= tiefe:
+                # Geist ist schneller am Dot als wir → zu riskant
+                score -= 500
+            elif naechste_geist_dist <= sicherheits_grenze:
+                # Knapp, aber der letzte Dot ist es wert!
+                score -= 50
+            else:
+                # Sicher erreichbar → stark anziehen
+                score += 80
+        else:
+            # NORMALFALL: Pacman muss rein UND wieder raus
+            sicherheits_grenze = 2 * tiefe + hunter_puffer
+
+            if naechste_geist_dist <= tiefe + 1:
+                # Geist kann uns abschneiden!
+                score -= 1500
+            elif naechste_geist_dist <= sicherheits_grenze:
+                # Knapp — lieber vermeiden
+                score -= 300
+            else:
+                # Sicher → Dots attraktiv machen
+                if pos in dot_positionen:
+                    score += 25
 
     # ============================================
-    # FEATURE 7: Bewegungsfreiheit & Fluchtweg-Analyse
+    # FEATURE 7: Flucht aus Sackgasse
+    # ============================================
+    # Wenn Pacman AKTUELL in einer Sackgasse steckt:
+    # → Richtung Ausgang (niedrigere Tiefe) stark bevorzugen
+    # → Tiefer rein nur wenn wirklich sicher
+    # Prüfe ob es tiefer in der Sackgasse noch Dots gibt (Endgame-Relevanz)
+    def _dots_tiefer_in_sackgasse(ab_tiefe):
+        """Zählt Dots die tiefer in der Sackgasse liegen als ab_tiefe."""
+        anzahl = 0
+        for d in dot_positionen:
+            if d in sackgassen and sackgassen[d] >= ab_tiefe:
+                anzahl += 1
+        return anzahl
+
+    if pac_pos is not None and pac_pos in sackgassen and not geister_sind_veraengstigt:
+        pac_tiefe = sackgassen[pac_pos]
+        hunter_puffer = 5 if naechster_geist_typ == 'H' else 0
+
+        # Endgame-Check: Liegen die letzten Dots tiefer in dieser Sackgasse?
+        dots_tiefer = _dots_tiefer_in_sackgasse(pac_tiefe)
+        endgame_sammeln = verbleibende_dots <= 5 and dots_tiefer >= verbleibende_dots
+
+        if pos in sackgassen:
+            pos_tiefe = sackgassen[pos]
+
+            if pos_tiefe < pac_tiefe:
+                # → Richtung Ausgang!
+                if endgame_sammeln:
+                    pass  # NICHT fliehen! Die letzten Dots liegen tiefer drin
+                elif naechste_geist_dist < 2 * pac_tiefe + hunter_puffer:
+                    score += 250     # Starker Flucht-Bonus
+                else:
+                    score += 30      # Leichter Bonus auch wenn sicher
+            elif pos_tiefe > pac_tiefe:
+                # → Tiefer rein
+                if endgame_sammeln:
+                    # Endgame: tiefer rein ist gewollt → Bonus statt Strafe!
+                    score += 150
+                else:
+                    sicherheits_grenze_tief = 2 * pos_tiefe + hunter_puffer
+                    if naechste_geist_dist < sicherheits_grenze_tief:
+                        score -= 500     # Gefährlich, nicht noch tiefer!
+        else:
+            # pos ist RAUS aus der Sackgasse → Ausgang erreicht!
+            if naechste_geist_dist < 2 * pac_tiefe + hunter_puffer + 3:
+                score += 350         # Starker Bonus fürs Rauskommen
+
+    # ============================================
+    # FEATURE 8: Bewegungsfreiheit & Fluchtweg-Analyse
     # ============================================
     nachbarn = begehbare_nachbarn(level, pos[0], pos[1])
     anzahl_nachbarn = len(nachbarn)
     score += 3 * anzahl_nachbarn
 
-    # Fluchtweg-Analyse: Wie viele Ausgänge sind geisterfrei?
     if not geister_sind_veraengstigt and naechste_geist_dist <= 6:
         sichere_ausgaenge = 0
         for nachbar in nachbarn:
@@ -163,18 +245,18 @@ def evaluate(pos, level, wertekarte, dot_positionen,
                 sichere_ausgaenge += 1
 
         if sichere_ausgaenge == 0:
-            score -= 2000      # Komplett eingekreist
+            score -= 2000
         elif sichere_ausgaenge == 1 and naechste_geist_dist <= 3:
-            score -= 500       # Nur ein Ausweg und Geist sehr nah
+            score -= 500
 
     # ============================================
-    # FEATURE 8: Korridor-Gefahr
+    # FEATURE 9: Korridor-Gefahr
     # ============================================
     if anzahl_nachbarn <= 2 and not geister_sind_veraengstigt:
         if naechste_geist_dist <= 4:
-            score -= 300
+            score -= 200
         elif naechste_geist_dist <= 6:
-            score -= 80
+            score -= 40
 
     return score
 
@@ -182,9 +264,6 @@ def evaluate(pos, level, wertekarte, dot_positionen,
 def _ghost_dist(ghost, pos, ghost_pos, geister_distanzen, distanzen):
     """
     Beste verfügbare Distanz vom Geist zur Kandidatenposition.
-    1. BFS vom Geist (geister_distanzen) — am genauesten
-    2. BFS von Pacman (distanzen) — Näherung
-    3. Manhattan-Distanz — Fallback
     """
     if geister_distanzen is not None and ghost in geister_distanzen:
         ghost_bfs = geister_distanzen[ghost]
@@ -198,7 +277,7 @@ def _ghost_dist(ghost, pos, ghost_pos, geister_distanzen, distanzen):
 
 
 def _ghost_dist_to(ghost, target, geister_distanzen):
-    """Distanz eines Geistes zu einem bestimmten Feld (aus Ghost-BFS)."""
+    """Distanz eines Geistes zu einem bestimmten Feld."""
     if geister_distanzen is not None and ghost in geister_distanzen:
         ghost_bfs = geister_distanzen[ghost]
         if target in ghost_bfs:

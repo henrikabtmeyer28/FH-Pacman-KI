@@ -45,6 +45,7 @@ class PacmanAgent:
         self.begehbare_felder = None
         self.sackgassen = None
         self.dots_seit_update = 0
+        self.schritte_seit_update = 0
         self.letzte_positionen = deque(maxlen=8)
 
     def render(self):
@@ -69,6 +70,7 @@ class PacmanAgent:
                 if cell == TILE_TYPES.get('*'):
                     self.dot_positionen.add((y, x))
 
+        # sackgassen ist jetzt ein Dict {(y,x): tiefe}
         self.sackgassen = finde_sackgassen(level)
 
         self.wertekarte = value_iteration(
@@ -108,10 +110,7 @@ class PacmanAgent:
         geister = self.env.ghost_list
         powerpill_timer = self.env.pacman.powerpill_time_left
 
-        # ---- NEU: BFS von jeder lebenden Geisterposition ----
-        # Gibt für jeden Geist die echte Labyrinth-Distanz zu
-        # allen erreichbaren Feldern. Kostet ca. 2 BFS pro Zug
-        # (bei 2 Geistern), ist aber für ~900 Felder sehr schnell.
+        # BFS von jeder lebenden Geisterposition
         geister_distanzen = {}
         for ghost in geister:
             if not ghost.get_is_dead():
@@ -137,7 +136,8 @@ class PacmanAgent:
                 sackgassen=self.sackgassen,
                 powerpill_timer=powerpill_timer,
                 distanzen=distanzen,
-                geister_distanzen=geister_distanzen     # NEU
+                geister_distanzen=geister_distanzen,
+                pac_pos=pac_pos                          # NEU
             )
 
             if (ny, nx) in self.letzte_positionen:
@@ -159,11 +159,15 @@ class PacmanAgent:
             self.dot_positionen.discard(pac_pos)
             self.dots_seit_update += 1
 
-        if self.dots_seit_update >= 10:
+        self.schritte_seit_update += 1
+
+        # Update nach 10 gefressenen Dots ODER alle 50 Schritte
+        if self.dots_seit_update >= 10 or self.schritte_seit_update >= 50:
             self.wertekarte = value_iteration(
                 self.env.view, self.begehbare_felder, self.dot_positionen
             )
             self.dots_seit_update = 0
+            self.schritte_seit_update = 0
             print(f"Wertekarte aktualisiert, {len(self.dot_positionen)} Dots übrig")
 
     def close(self):
