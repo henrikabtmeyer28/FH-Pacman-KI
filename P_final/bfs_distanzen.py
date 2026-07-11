@@ -4,12 +4,14 @@ from game_core.config import TILE_TYPES
 RICHTUNGEN = [(0, -1), (0, 1), (-1, 0), (1, 0)]
 
 
+# Hilfsfunktion, ist das Feld begehbar?
 def ist_begehbar(level, y, x):
     if y < 0 or x < 0 or y >= len(level) or x >= len(level[0]):
         return False
     return level[y][x] != TILE_TYPES.get('#')
 
 
+# Hilfsfunktion, gibt alle begehbaren Nachbarn zurück
 def begehbare_nachbarn(level, y, x):
     nachbarn = []
     for dy, dx in RICHTUNGEN:
@@ -19,6 +21,8 @@ def begehbare_nachbarn(level, y, x):
     return nachbarn
 
 
+# Breitensuche von den Positionen aus, es wird nur geguckt wie viele Schritte man tatsächlich von einer Position zu einer anderen braucht
+# Gibt ein dictionary zurück, also Koordinate und Distanz bis dahin
 def bfs_distanzen(level, start_y, start_x):
     distanzen = {}
     queue = deque()
@@ -34,21 +38,11 @@ def bfs_distanzen(level, start_y, start_x):
                 queue.append(((ny, nx), distance + 1))
     return distanzen
 
-
+# Hilfsfunktion, findet Sackgassen im Labyrinth mit den anderen Hilfsfunktionen
 def finde_sackgassen(level):
-    """
-    Findet alle Sackgassen-Felder und berechnet deren Tiefe.
-
-    Returns:
-        dict: {(y, x): tiefe}
-              tiefe = Anzahl Schritte bis zur nächsten Kreuzung (Ausgang).
-              Höhere Tiefe = tiefer in der Sackgasse = gefährlicher.
-              Das Feld direkt vor der Kreuzung hat tiefe=1,
-              das tote Ende hat die höchste tiefe.
-    """
     sackgassen = {}
 
-    # Schritt 1: Alle Sackgassen-Enden finden (nur 1 Nachbar)
+    # 1. Alle Sackgassen-Enden finden (nur 1 Nachbar)
     sackgassen_enden = []
     for y in range(len(level)):
         for x in range(len(level[0])):
@@ -58,7 +52,7 @@ def finde_sackgassen(level):
             if len(nachbarn) == 1:
                 sackgassen_enden.append((y, x))
 
-    # Schritt 2: Von jedem Ende den Korridor zurückverfolgen,
+    # 2. Von jedem Ende den Korridor zurückverfolgen,
     #            Tiefe für jedes Feld berechnen
     for ende in sackgassen_enden:
         aktuell = ende
@@ -68,7 +62,7 @@ def finde_sackgassen(level):
         while aktuell is not None:
             nachbarn = begehbare_nachbarn(level, aktuell[0], aktuell[1])
 
-            # Kreuzung erreicht (3+ Nachbarn)? → Nicht mehr Teil der Sackgasse
+            # Kreuzung erreicht (3+ Nachbarn)? -> Nicht mehr Teil der Sackgasse
             if len(nachbarn) >= 3:
                 break
 

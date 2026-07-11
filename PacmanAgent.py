@@ -63,6 +63,7 @@ class PacmanAgent:
         self.begehbare_felder = set()
         self.dot_positionen = set()
 
+        # Alle begehbare Felder und Dots werden festgehalten
         for y, row in enumerate(level):
             for x, cell in enumerate(row):
                 if cell != TILE_TYPES.get('#'):
@@ -70,9 +71,10 @@ class PacmanAgent:
                 if cell == TILE_TYPES.get('*'):
                     self.dot_positionen.add((y, x))
 
-        # sackgassen ist jetzt ein Dict {(y,x): tiefe}
+        # Sackgassen Array initialisieren
         self.sackgassen = finde_sackgassen(level)
 
+        # Wertekarte für den Pac damit er weiß in welcher Reihenfolge er die Dots essen sollte
         self.wertekarte = value_iteration(
             level, self.begehbare_felder, self.dot_positionen
         )
@@ -90,6 +92,7 @@ class PacmanAgent:
             if not self.ist_initialisiert:
                 self.initialisiere()
 
+            # Algorithmus zum herausfinden von der nächsten Aktion wird gestartet
             self.action = self.waehle_aktion()
 
             observation, reward, self.terminated, self.truncated, self.statistics = self.env.step(self.action)
@@ -104,13 +107,13 @@ class PacmanAgent:
 
         self.aktualisiere_dots(pac_pos)
 
-        # BFS von Pacmans Position
+        # Breitensuche von Pacmans Position
         distanzen = bfs_distanzen(level, pac_y, pac_x)
 
         geister = self.env.ghost_list
         powerpill_timer = self.env.pacman.powerpill_time_left
 
-        # BFS von jeder lebenden Geisterposition
+        # Breitensuche von jeder lebenden Geisterposition
         geister_distanzen = {}
         for ghost in geister:
             if not ghost.get_is_dead():
@@ -122,11 +125,14 @@ class PacmanAgent:
         best_score = float('-inf')
 
         for action, (dy, dx) in enumerate(RICHTUNGEN):
+
+            # Neue Position berechnen
             ny, nx = pac_y + dy, pac_x + dx
 
             if not ist_begehbar(level, ny, nx):
                 continue
 
+            # Jede Richtung kriegt einen Score
             score = evaluate(
                 pos=(ny, nx),
                 level=level,
@@ -137,9 +143,10 @@ class PacmanAgent:
                 powerpill_timer=powerpill_timer,
                 distanzen=distanzen,
                 geister_distanzen=geister_distanzen,
-                pac_pos=pac_pos                          # NEU
+                pac_pos=pac_pos
             )
 
+            # Soll konstantes hin und her laufen verhindern
             if (ny, nx) in self.letzte_positionen:
                 score -= 20.0
 
@@ -154,7 +161,7 @@ class PacmanAgent:
         return best_action
 
     def aktualisiere_dots(self, pac_pos):
-        """Dot entfernen wenn Pacman draufsteht, Wertekarte bei Bedarf neu berechnen."""
+        # Dot entfernen wenn Pacman draufsteht, Wertekarte bei Bedarf neu berechnen
         if pac_pos in self.dot_positionen:
             self.dot_positionen.discard(pac_pos)
             self.dots_seit_update += 1
